@@ -103,4 +103,57 @@ class User
 
         return (int) $this->database->lastInsertId();
     }
+
+        /**
+     * Busca un usuario mediante el hash del token de confirmación.
+     *
+     * El token original nunca se guarda en la base de datos.
+     * Solo almacenamos su SHA-256.
+     */
+    public function findByConfirmationTokenHash(
+        string $tokenHash
+    ): ?array {
+        $statement = $this->database->prepare(
+            'SELECT
+                id,
+                username,
+                email,
+                is_confirmed,
+                confirmation_expires_at
+             FROM users
+             WHERE confirmation_token_hash = :token_hash
+             LIMIT 1'
+        );
+
+        $statement->execute([
+            'token_hash' => $tokenHash,
+        ]);
+
+        $user = $statement->fetch();
+
+        return $user !== false ? $user : null;
+    }
+
+        /**
+     * Activa la cuenta y elimina el token de confirmación.
+     *
+     * Al eliminar el token, el mismo enlace no puede volver
+     * a utilizarse posteriormente.
+     */
+    public function confirm(int $userId): void
+    {
+        $statement = $this->database->prepare(
+            'UPDATE users
+             SET
+                is_confirmed = TRUE,
+                confirmation_token_hash = NULL,
+                confirmation_expires_at = NULL
+             WHERE id = :id
+             LIMIT 1'
+        );
+
+        $statement->execute([
+            'id' => $userId,
+        ]);
+    }
 }

@@ -12,10 +12,17 @@ $emailError = $errors['email'] ?? null;
 $passwordError = $errors['password'] ?? null;
 ?>
 
-<section>
-    <h2>Create your account</h2>
+<!-- Panel de registro con el estilo global de Camagru. -->
+<section class="page-heading">
+    <h1>Create your account</h1>
 
-    <form method="POST" action="/register">
+    <p>
+        Join Camagru and start creating your own visual stories.
+    </p>
+</section>
+
+<section class="panel">
+    <form method="POST" action="/register" class="form">
 
         <!-- Token de seguridad contra ataques CSRF. -->
         <input
@@ -28,10 +35,13 @@ $passwordError = $errors['password'] ?? null;
             ) ?>"
         >
 
-        <div>
-            <label for="username">Username</label>
+        <div class="form-group">
+            <label class="form-label" for="username">
+                Username
+            </label>
 
             <input
+                class="form-control"
                 type="text"
                 id="username"
                 name="username"
@@ -45,10 +55,11 @@ $passwordError = $errors['password'] ?? null;
                 pattern="[A-Za-z0-9_]{3,50}"
                 required
                 autocomplete="username"
+                placeholder="Choose a username"
             >
 
             <?php if ($usernameError !== null): ?>
-                <p>
+                <p class="alert alert-error">
                     <?= htmlspecialchars(
                         $usernameError,
                         ENT_QUOTES,
@@ -58,10 +69,13 @@ $passwordError = $errors['password'] ?? null;
             <?php endif; ?>
         </div>
 
-        <div>
-            <label for="email">Email</label>
+        <div class="form-group">
+            <label class="form-label" for="email">
+                Email address
+            </label>
 
             <input
+                class="form-control"
                 type="email"
                 id="email"
                 name="email"
@@ -73,10 +87,11 @@ $passwordError = $errors['password'] ?? null;
                 maxlength="255"
                 required
                 autocomplete="email"
+                placeholder="you@example.com"
             >
 
             <?php if ($emailError !== null): ?>
-                <p>
+                <p class="alert alert-error">
                     <?= htmlspecialchars(
                         $emailError,
                         ENT_QUOTES,
@@ -86,25 +101,29 @@ $passwordError = $errors['password'] ?? null;
             <?php endif; ?>
         </div>
 
-        <div>
-            <label for="password">Password</label>
+        <div class="form-group">
+            <label class="form-label" for="password">
+                Password
+            </label>
 
             <input
+                class="form-control"
                 type="password"
                 id="password"
                 name="password"
                 minlength="8"
                 required
                 autocomplete="new-password"
+                placeholder="Create a strong password"
             >
 
-            <p>
+            <p class="form-help">
                 At least 8 characters, including uppercase,
                 lowercase and a number.
             </p>
 
             <?php if ($passwordError !== null): ?>
-                <p>
+                <p class="alert alert-error">
                     <?= htmlspecialchars(
                         $passwordError,
                         ENT_QUOTES,
@@ -114,6 +133,8 @@ $passwordError = $errors['password'] ?? null;
             <?php endif; ?>
         </div>
 
-        <button type="submit">Create account</button>
+        <button class="button button-primary" type="submit">
+            Create account
+        </button>
     </form>
 </section>
