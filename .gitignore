@@ -1,0 +1,7 @@
+.env
+
+/storage/images/*
+/storage/overlays/*
+
+!/storage/images/.gitkeep
+!/storage/overlays/.gitkeep
