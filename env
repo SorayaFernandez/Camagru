@@ -1,0 +1,38 @@
+APP_ENV=development
+
+DB_HOST=db
+DB_PORT=3306
+DB_NAME=camagru
+DB_USER=camagru
+DB_PASSWORD=camagru_password
+DB_ROOT_PASSWORD=root_password
+
+APP_URL=http://localhost:8080
+
+# ============================================================
+# SMTP - Gmail
+# ============================================================
+
+# Servidor SMTP oficial de Gmail.
+SMTP_HOST=smtp.gmail.com
+
+# Puerto SMTP para conexiones mediante STARTTLS.
+SMTP_PORT=587
+
+# Tu dirección personal de Gmail.
+SMTP_USER=sorayafernandezramirez@gmail.com
+
+# Contraseña de aplicación de Google.
+SMTP_PASSWORD=hsracacwcqfrqadd
+
+# Dirección desde la que Camagru enviará los correos.
+MAIL_FROM_ADDRESS=sorayafernandezramirez@gmail.com
+
+# Nombre que verá el destinatario como remitente.
+MAIL_FROM_NAME=Camagru
+
+# Cifrado utilizado para la conexión SMTP.
+SMTP_ENCRYPTION=starttls
+
+
+
