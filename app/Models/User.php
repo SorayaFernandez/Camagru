@@ -156,4 +156,74 @@ class User
             'id' => $userId,
         ]);
     }
+
+    /**
+     * Busca un usuario por su dirección de correo electrónico
+     * y devuelve toda la información necesaria para iniciar sesión.
+     *
+     * El método reutiliza la búsqueda existente por email, pero
+     * mantiene toda la lógica de acceso a datos dentro del modelo.
+     *
+     * @param string $email Dirección de correo del usuario.
+     *
+     * @return array<string, mixed>|null Datos del usuario o null
+     * si no existe.
+     */
+    public static function findForLogin(string $email): ?array
+    {
+        /*
+        * Obtenemos la conexión PDO mediante la clase Database.
+        */
+        $database = Database::connection();
+
+        /*
+        * Utilizamos una consulta preparada para evitar
+        * inyección SQL.
+        */
+        $statement = $database->prepare(
+            'SELECT
+                id,
+                username,
+                email,
+                password_hash,
+                is_confirmed
+            FROM users
+            WHERE email = :email
+            LIMIT 1'
+        );
+
+        /*
+        * Normalizamos el email antes de realizar la búsqueda.
+        */
+        $normalizedEmail = strtolower(trim($email));
+
+        /*
+        * Ejecutamos la consulta pasando el email como parámetro.
+        */
+        $statement->execute([
+            'email' => $normalizedEmail,
+        ]);
+
+        /*
+        * Recuperamos el usuario como array asociativo.
+        */
+        $user = $statement->fetch();
+
+        /*
+        * Si no existe ningún usuario con ese email,
+        * devolvemos null.
+        */
+        if ($user === false) {
+            return null;
+        }
+
+        /*
+        * Convertimos explícitamente los campos booleanos y numéricos
+        * para trabajar con tipos coherentes en PHP.
+        */
+        $user['id'] = (int) $user['id'];
+        $user['is_confirmed'] = (bool) $user['is_confirmed'];
+
+        return $user;
+    }
 }

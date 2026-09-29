@@ -3,9 +3,13 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/app/Core/Router.php';
+require_once dirname(__DIR__) . '/app/Core/Csrf.php';
+require_once dirname(__DIR__) . '/app/Services/AuthService.php';
+require_once dirname(__DIR__) . '/app/Services/MailService.php';
 require_once dirname(__DIR__) . '/app/Controllers/HomeController.php';
 require_once dirname(__DIR__) . '/app/Controllers/RegisterController.php';
 require_once dirname(__DIR__) . '/app/Controllers/ConfirmController.php';
+require_once dirname(__DIR__) . '/app/Controllers/AuthController.php';
 
 $router = new Router();
 
@@ -18,6 +22,9 @@ $registerController = new RegisterController();
 // Controller de confirmación.
 $confirmController = new ConfirmController();
 
+// Controller de autenticación.
+$authController = new AuthController();
+
 // Página principal.
 $router->get('/', [$homeController, 'index']);
 
@@ -29,6 +36,16 @@ $router->post('/register', [$registerController, 'register']);
 
 // Confirmación mediante el enlace recibido por email.
 $router->get('/confirm', [$confirmController, 'confirm']);
+
+// Rutas de autenticación.
+ // GET /login  → muestra el formulario.
+$router->get('/login', [$authController, 'showLogin']);
+
+ // POST /login → procesa las credenciales.
+$router->post('/login', [$authController, 'login']);
+
+ // POST /logout → cierra la sesión.
+$router->post('/logout', [$authController, 'logout']);
 
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 

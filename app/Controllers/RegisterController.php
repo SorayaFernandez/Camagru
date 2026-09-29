@@ -24,7 +24,7 @@ class RegisterController extends Controller
          * Generamos un token CSRF para proteger el formulario
          * frente a peticiones POST no autorizadas.
          */
-        $csrfToken = Csrf::getToken();
+        $csrfToken = Csrf::token();
 
         /*
          * Mostramos la vista de registro.
@@ -54,7 +54,7 @@ class RegisterController extends Controller
             $this->render(
                 'auth/register',
                 [
-                    'csrfToken' => Csrf::getToken(),
+                    'csrfToken' => Csrf::token(),
                     'errors' => [
                         'general' => 'La solicitud no es válida. Inténtalo de nuevo.',
                     ],
@@ -115,7 +115,7 @@ class RegisterController extends Controller
                 $this->render(
                     'auth/register',
                     [
-                        'csrfToken' => Csrf::getToken(),
+                        'csrfToken' => Csrf::token(),
                         'errors' => $result['errors'] ?? [
                             'general' => 'No se pudo completar el registro.',
                         ],
@@ -264,7 +264,7 @@ class RegisterController extends Controller
             $this->render(
                 'auth/register',
                 [
-                    'csrfToken' => Csrf::getToken(),
+                    'csrfToken' => Csrf::token(),
                     'errors' => [
                         'general' =>
                             'No se pudo completar el registro. '
