@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+require_once dirname(__DIR__) . '/app/Core/Auth.php';
+
+// Iniciamos la sesión antes de enviar cualquier contenido HTML.
+Auth::startSession();
+
 require_once dirname(__DIR__) . '/app/Core/Router.php';
 require_once dirname(__DIR__) . '/app/Core/Csrf.php';
 require_once dirname(__DIR__) . '/app/Services/AuthService.php';

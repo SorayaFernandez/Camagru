@@ -176,18 +176,38 @@ class AuthController extends Controller
 
     /**
      * Cierra la sesión del usuario actual.
+     *
+     * El logout utiliza POST y CSRF porque cerrar una sesión
+     * modifica el estado de autenticación.
      */
     public function logout(): void
     {
         /*
-         * Auth::logout() elimina los datos de autenticación
-         * y destruye la sesión.
-         */
+        * Comprobamos el token CSRF antes de cerrar la sesión.
+        *
+        * De esta forma una página externa no puede provocar
+        * un logout mediante una petición no autorizada.
+        */
+        if (!Csrf::verify($_POST['csrf_token'] ?? '')) {
+            /*
+            * Si el token no es válido, no modificamos la sesión.
+            */
+            http_response_code(403);
+
+            echo 'Solicitud no válida.';
+
+            return;
+        }
+
+        /*
+        * Eliminamos los datos de autenticación y destruimos
+        * la sesión actual.
+        */
         Auth::logout();
 
         /*
-         * Volvemos a la página principal.
-         */
+        * Volvemos a la página principal.
+        */
         $this->redirect('/');
     }
 }

@@ -413,3 +413,49 @@ main {
         width: 100%;
     }
 }
+
+/*
+ * Formulario utilizado para el cierre de sesión.
+ *
+ * Al contener solamente un botón, eliminamos los estilos
+ * por defecto del formulario para integrarlo visualmente
+ * dentro de la navegación.
+ */
+.logout-form {
+    display: inline;
+    margin: 0;
+    padding: 0;
+}
+
+/*
+ * Botón de navegación utilizado para "Cerrar sesión".
+ *
+ * Visualmente se comporta como un enlace, pero sigue siendo
+ * un botón HTML porque la operación utiliza POST.
+ */
+.nav-button {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+/*
+ * Mantenemos el efecto visual de los enlaces de navegación
+ * cuando el usuario pasa el cursor sobre el botón.
+ */
+.nav-button:hover {
+    color: #ec4899;
+}
+
+/*
+ * El botón también debe ser claramente accesible mediante
+ * navegación con teclado.
+ */
+.nav-button:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 4px;
+}

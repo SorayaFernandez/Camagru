@@ -21,7 +21,6 @@ declare(strict_types=1);
             Cabecera de la pantalla de autenticación.
         -->
         <div class="panel-header">
-            <p class="eyebrow">CAMAGRU / AUTH</p>
 
             <h1>Iniciar sesión</h1>
 
