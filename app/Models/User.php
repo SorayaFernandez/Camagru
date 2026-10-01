@@ -226,4 +226,140 @@ class User
 
         return $user;
     }
+
+    /**
+     * Actualiza el nombre de usuario y el correo electrónico.
+     *
+     * Utilizamos una consulta preparada para evitar
+     * inyección SQL.
+     *
+     * @param int $userId ID del usuario que se va a modificar.
+     * @param string $username Nuevo nombre de usuario.
+     * @param string $email Nuevo correo electrónico.
+     */
+    public function updateAccount(
+        int $userId,
+        string $username,
+        string $email
+    ): void {
+        /*
+         * Preparamos la consulta UPDATE.
+         *
+         * No construimos la consulta concatenando directamente
+         * los valores proporcionados por el usuario.
+         */
+        $statement = $this->database->prepare(
+            'UPDATE users
+             SET
+                username = :username,
+                email = :email,
+                updated_at = CURRENT_TIMESTAMP
+             WHERE id = :id
+             LIMIT 1'
+        );
+
+        /*
+         * Ejecutamos la consulta utilizando parámetros preparados.
+         */
+        $statement->execute([
+            'username' => $username,
+            'email' => $email,
+            'id' => $userId,
+        ]);
+    }
+
+    /**
+     * Actualiza la contraseña de un usuario.
+     *
+     * Este método recibe únicamente el hash de la contraseña.
+     * Nunca recibe ni almacena la contraseña original.
+     *
+     * @param int $userId ID del usuario.
+     * @param string $passwordHash Hash generado mediante password_hash().
+     */
+    public function updatePassword(
+        int $userId,
+        string $passwordHash
+    ): void {
+        /*
+         * Actualizamos únicamente el hash de la contraseña.
+         */
+        $statement = $this->database->prepare(
+            'UPDATE users
+             SET
+                password_hash = :password_hash,
+                updated_at = CURRENT_TIMESTAMP
+             WHERE id = :id
+             LIMIT 1'
+        );
+
+        /*
+         * Ejecutamos la consulta con parámetros preparados.
+         */
+        $statement->execute([
+            'password_hash' => $passwordHash,
+            'id' => $userId,
+        ]);
+    }
+
+    /**
+     * Actualiza el username sin modificar el estado de confirmación.
+     *
+     * El username no necesita confirmación por correo.
+     */
+    public function updateUsername(
+        int $userId,
+        string $username
+    ): void {
+        $statement = $this->database->prepare(
+            'UPDATE users
+             SET
+                username = :username,
+                updated_at = CURRENT_TIMESTAMP
+             WHERE id = :id
+             LIMIT 1'
+        );
+
+        $statement->execute([
+            'username' => $username,
+            'id' => $userId,
+        ]);
+    }
+
+    /**
+     * Actualiza el email y prepara una nueva confirmación.
+     *
+     * El token original nunca se guarda en la base de datos.
+     * Solo almacenamos su SHA-256.
+     *
+     * Al cambiar el email:
+     * - La cuenta deja de estar confirmada.
+     * - Se genera un nuevo token.
+     * - El token tiene una fecha de expiración.
+     */
+    public function updateEmailWithConfirmation(
+        int $userId,
+        string $email,
+        string $confirmationTokenHash,
+        string $confirmationExpiresAt
+    ): void {
+        $statement = $this->database->prepare(
+            'UPDATE users
+             SET
+                email = :email,
+                is_confirmed = FALSE,
+                confirmation_token_hash = :confirmation_token_hash,
+                confirmation_expires_at = :confirmation_expires_at,
+                updated_at = CURRENT_TIMESTAMP
+             WHERE id = :id
+             LIMIT 1'
+        );
+
+        $statement->execute([
+            'email' => $email,
+            'confirmation_token_hash' => $confirmationTokenHash,
+            'confirmation_expires_at' => $confirmationExpiresAt,
+            'id' => $userId,
+        ]);
+    }
 }

@@ -6,7 +6,7 @@ declare(strict_types=1);
 <!-- Presentación principal de Camagru. -->
 <section class="page-heading">
     <h1>
-        Capture your world.
+        Capture your world
     </h1>
 
     <p>

@@ -1,0 +1,500 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * ProfileController
+ *
+ * Gestiona el perfil del usuario autenticado.
+ *
+ * Funcionalidades:
+ *
+ * - Mostrar los datos actuales del usuario.
+ * - Modificar username.
+ * - Modificar email.
+ * - Modificar contraseña.
+ *
+ * Todas las modificaciones requieren:
+ *
+ * - Usuario autenticado.
+ * - Petición POST.
+ * - Token CSRF válido.
+ */
+class ProfileController extends Controller
+{
+    /**
+     * Muestra el perfil del usuario autenticado.
+     */
+    public function show(): void
+    {
+        /*
+         * Comprobamos que exista una sesión autenticada.
+         */
+        if (!Auth::check()) {
+            $this->redirect('/login');
+
+            return;
+        }
+
+        /*
+         * Obtenemos el ID almacenado en la sesión.
+         */
+        $userId = Auth::userId();
+
+        /*
+         * Auth::userId() puede devolver null.
+         *
+         * Aunque Auth::check() haya devuelto true, mantenemos
+         * esta comprobación para trabajar con tipos estrictos.
+         */
+        if ($userId === null) {
+            $this->redirect('/login');
+
+            return;
+        }
+
+        /*
+         * User utiliza métodos de instancia, por lo que creamos
+         * una instancia del modelo.
+         */
+        $userModel = new User();
+
+        /*
+         * Recuperamos los datos del usuario.
+         */
+        $user = $userModel->findById($userId);
+
+        /*
+         * Si la cuenta ya no existe, eliminamos la sesión.
+         */
+        if ($user === null) {
+            Auth::logout();
+
+            $this->redirect('/login');
+
+            return;
+        }
+
+        /*
+         * Generamos el token CSRF para los formularios del perfil.
+         */
+        $csrfToken = Csrf::token();
+
+        /*
+         * Renderizamos la página.
+         */
+        $this->render(
+            'auth/profile',
+            [
+                'csrfToken' => $csrfToken,
+                'user' => $user,
+                'errors' => [],
+                'success' => null,
+                'old' => [],
+            ]
+        );
+    }
+
+    /**
+     * Actualiza username y correo electrónico.
+     */
+    public function updateAccount(): void
+    {
+        /*
+         * Solo un usuario autenticado puede modificar
+         * los datos de su propia cuenta.
+         */
+        if (!Auth::check()) {
+            $this->redirect('/login');
+
+            return;
+        }
+
+        /*
+         * Validamos el token CSRF.
+         */
+        if (!Csrf::verify($_POST['csrf_token'] ?? '')) {
+            $this->renderProfileError(
+                'La solicitud no es válida. Inténtalo de nuevo.'
+            );
+
+            return;
+        }
+
+        /*
+         * Obtenemos el ID del usuario actual.
+         */
+        $userId = Auth::userId();
+
+        if ($userId === null) {
+            $this->redirect('/login');
+
+            return;
+        }
+
+        /*
+         * Creamos el modelo de usuario.
+         */
+        $userModel = new User();
+
+        /*
+         * Recuperamos los datos actuales.
+         */
+        $user = $userModel->findById($userId);
+
+        if ($user === null) {
+            Auth::logout();
+
+            $this->redirect('/login');
+
+            return;
+        }
+
+        /*
+         * Recuperamos los datos enviados por el formulario.
+         */
+        $username = trim(
+            (string) ($_POST['username'] ?? '')
+        );
+
+        $email = trim(
+            (string) ($_POST['email'] ?? '')
+        );
+
+        /*
+         * Validamos el username utilizando las mismas reglas
+         * que utilizamos durante el registro.
+         */
+        // Validamos el username utilizando las mismas reglas
+        // que utilizamos durante el registro.
+        if (!Validator::username($username)) {
+            $this->renderProfileError(
+                'El nombre de usuario debe tener entre 3 y 50 caracteres y solo puede contener letras, números y guiones bajos.',
+                [
+                    'username' => $username,
+                    'email' => $email,
+                ]
+            );
+
+            return;
+        }
+
+        /*
+        * Validamos el correo electrónico.
+        */
+        if (!Validator::email($email)) {
+            $this->renderProfileError(
+                'Introduce un correo electrónico válido.',
+                [
+                    'username' => $username,
+                    'email' => $email,
+                ]
+            );
+
+            return;
+        }
+
+        /*
+         * Normalizamos el correo electrónico.
+         */
+        $email = strtolower($email);
+
+        /*
+         * Comprobamos que el nuevo username no pertenezca
+         * a otra cuenta.
+         */
+        $existingUsername = $userModel->findByUsername($username);
+
+        if (
+            $existingUsername !== null
+            && (int) $existingUsername['id'] !== $userId
+        ) {
+            $this->renderProfileError(
+                'Ese nombre de usuario ya está en uso.',
+                [
+                    'username' => $username,
+                    'email' => $email,
+                ]
+            );
+
+            return;
+        }
+
+        /*
+         * Comprobamos que el nuevo email no pertenezca
+         * a otra cuenta.
+         */
+        $existingEmail = $userModel->findByEmail($email);
+
+        if (
+            $existingEmail !== null
+            && (int) $existingEmail['id'] !== $userId
+        ) {
+            $this->renderProfileError(
+                'Ese correo electrónico ya está en uso.',
+                [
+                    'username' => $username,
+                    'email' => $email,
+                ]
+            );
+
+            return;
+        }
+
+        /*
+         * Guardamos los nuevos datos.
+         */
+        $userModel->updateAccount(
+            $userId,
+            $username,
+            $email
+        );
+
+        /*
+         * No necesitamos modificar la sesión porque Auth
+         * solamente almacena el user_id.
+         */
+        $this->renderProfileSuccess(
+            'Los datos de tu cuenta se han actualizado correctamente.'
+        );
+    }
+
+    /**
+     * Cambia la contraseña del usuario autenticado.
+     */
+    public function updatePassword(): void
+    {
+        /*
+         * Comprobamos autenticación.
+         */
+        if (!Auth::check()) {
+            $this->redirect('/login');
+
+            return;
+        }
+
+        /*
+         * Comprobamos CSRF.
+         */
+        if (!Csrf::verify($_POST['csrf_token'] ?? '')) {
+            $this->renderProfileError(
+                'La solicitud no es válida. Inténtalo de nuevo.'
+            );
+
+            return;
+        }
+
+        /*
+         * Obtenemos los datos enviados.
+         *
+         * La contraseña nunca se almacena en variables de sesión
+         * ni se vuelve a mostrar al usuario.
+         */
+        $currentPassword = (string) (
+            $_POST['current_password'] ?? ''
+        );
+
+        $newPassword = (string) (
+            $_POST['new_password'] ?? ''
+        );
+
+        $confirmPassword = (string) (
+            $_POST['confirm_password'] ?? ''
+        );
+
+        /*
+         * Obtenemos el usuario actual.
+         */
+        $userId = Auth::userId();
+
+        if ($userId === null) {
+            $this->redirect('/login');
+
+            return;
+        }
+
+        $userModel = new User();
+
+        $user = $userModel->findById($userId);
+
+        if ($user === null) {
+            Auth::logout();
+
+            $this->redirect('/login');
+
+            return;
+        }
+
+        /*
+         * Verificamos la contraseña actual contra su hash.
+         */
+        if (
+            !password_verify(
+                $currentPassword,
+                (string) $user['password_hash']
+            )
+        ) {
+            $this->renderProfileError(
+                'La contraseña actual no es correcta.'
+            );
+
+            return;
+        }
+
+        /*
+        * Validamos la nueva contraseña con las mismas reglas
+        * utilizadas durante el registro.
+        */
+        if (!Validator::password($newPassword)) {
+            $this->renderProfileError(
+                'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.'
+            );
+
+            return;
+        }
+
+        /*
+         * Comprobamos que ambas nuevas contraseñas coincidan.
+         */
+        if ($newPassword !== $confirmPassword) {
+            $this->renderProfileError(
+                'Las nuevas contraseñas no coinciden.'
+            );
+
+            return;
+        }
+
+        /*
+         * Generamos un nuevo hash seguro.
+         *
+         * Nunca almacenamos la contraseña original.
+         */
+        $passwordHash = password_hash(
+            $newPassword,
+            PASSWORD_DEFAULT
+        );
+
+        /*
+         * Guardamos el nuevo hash.
+         */
+        $userModel->updatePassword(
+            $userId,
+            $passwordHash
+        );
+
+        /*
+         * Mantenemos la sesión actual.
+         */
+        $this->renderProfileSuccess(
+            'Tu contraseña se ha actualizado correctamente.'
+        );
+    }
+
+    /**
+     * Renderiza el perfil mostrando un error.
+     *
+     * @param string $message Mensaje de error.
+     * @param array<string, string> $old Valores antiguos del formulario.
+     */
+    private function renderProfileError(
+        string $message,
+        array $old = []
+    ): void {
+        /*
+         * Recuperamos el usuario actual.
+         */
+        $userId = Auth::userId();
+
+        if ($userId === null) {
+            $this->redirect('/login');
+
+            return;
+        }
+
+        $userModel = new User();
+
+        $user = $userModel->findById($userId);
+
+        if ($user === null) {
+            Auth::logout();
+
+            $this->redirect('/login');
+
+            return;
+        }
+
+        /*
+         * Si no recibimos valores anteriores, mostramos
+         * los datos actuales de la cuenta.
+         */
+        if ($old === []) {
+            $old = [
+                'username' => (string) $user['username'],
+                'email' => (string) $user['email'],
+            ];
+        }
+
+        /*
+         * Renderizamos la vista con el mensaje de error.
+         */
+        $this->render(
+            'auth/profile',
+            [
+                'csrfToken' => Csrf::token(),
+                'user' => $user,
+                'errors' => [
+                    'general' => $message,
+                ],
+                'success' => null,
+                'old' => $old,
+            ]
+        );
+    }
+
+    /**
+     * Renderiza el perfil mostrando un mensaje de éxito.
+     */
+    private function renderProfileSuccess(
+        string $message
+    ): void {
+        /*
+         * Obtenemos nuevamente los datos después de la actualización.
+         */
+        $userId = Auth::userId();
+
+        if ($userId === null) {
+            $this->redirect('/login');
+
+            return;
+        }
+
+        $userModel = new User();
+
+        $user = $userModel->findById($userId);
+
+        if ($user === null) {
+            Auth::logout();
+
+            $this->redirect('/login');
+
+            return;
+        }
+
+        /*
+         * Mostramos el perfil actualizado.
+         */
+        $this->render(
+            'auth/profile',
+            [
+                'csrfToken' => Csrf::token(),
+                'user' => $user,
+                'errors' => [],
+                'success' => $message,
+                'old' => [
+                    'username' => (string) $user['username'],
+                    'email' => (string) $user['email'],
+                ],
+            ]
+        );
+    }
+}
