@@ -13,6 +13,7 @@ require_once dirname(__DIR__) . '/app/Services/AuthService.php';
 require_once dirname(__DIR__) . '/app/Services/MailService.php';
 require_once dirname(__DIR__) . '/app/Controllers/HomeController.php';
 require_once dirname(__DIR__) . '/app/Controllers/AuthController.php';
+require_once dirname(__DIR__) . '/app/Controllers/ImageController.php';
 require_once dirname(__DIR__) . '/app/Controllers/ConfirmController.php';
 require_once dirname(__DIR__) . '/app/Controllers/ProfileController.php';
 require_once dirname(__DIR__) . '/app/Controllers/RegisterController.php';
@@ -79,6 +80,16 @@ $router->post('/profile', function () use ($profileController): void {
     http_response_code(400);
     echo 'Solicitud no válida.';
 });
+
+$router->get(
+    '/create-image',
+    [new ImageController(), 'showCreate']
+);
+
+$router->post(
+    '/create-image',
+    [new ImageController(), 'create']
+);
 
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
