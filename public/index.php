@@ -11,6 +11,8 @@ require_once dirname(__DIR__) . '/app/Core/Csrf.php';
 require_once dirname(__DIR__) . '/app/Core/Router.php';
 require_once dirname(__DIR__) . '/app/Services/AuthService.php';
 require_once dirname(__DIR__) . '/app/Services/MailService.php';
+require_once dirname(__DIR__) . '/app/Services/ImageService.php';
+require_once dirname(__DIR__) . '/app/Models/Image.php';
 require_once dirname(__DIR__) . '/app/Controllers/HomeController.php';
 require_once dirname(__DIR__) . '/app/Controllers/AuthController.php';
 require_once dirname(__DIR__) . '/app/Controllers/ImageController.php';
