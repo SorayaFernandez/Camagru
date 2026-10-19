@@ -1,7 +1,7 @@
 .env
 
-/storage/images/*
+/storage/generated/*
 /storage/overlays/*
 
-!/storage/images/.gitkeep
+!/storage/generated/.gitkeep
 !/storage/overlays/.gitkeep

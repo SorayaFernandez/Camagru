@@ -12,6 +12,7 @@ require_once dirname(__DIR__) . '/app/Core/Router.php';
 require_once dirname(__DIR__) . '/app/Services/AuthService.php';
 require_once dirname(__DIR__) . '/app/Services/MailService.php';
 require_once dirname(__DIR__) . '/app/Services/ImageService.php';
+require_once dirname(__DIR__) . '/app/Services/ImageProcessor.php';
 require_once dirname(__DIR__) . '/app/Models/Image.php';
 require_once dirname(__DIR__) . '/app/Controllers/HomeController.php';
 require_once dirname(__DIR__) . '/app/Controllers/AuthController.php';
@@ -91,6 +92,12 @@ $router->get(
 $router->post(
     '/create-image',
     [new ImageController(), 'create']
+);
+
+// Sirve únicamente imágenes procesadas y registradas.
+$router->get(
+    '/generated-image',
+    [new ImageController(), 'showGenerated']
 );
 
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);

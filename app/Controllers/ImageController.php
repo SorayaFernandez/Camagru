@@ -3,151 +3,159 @@
 declare(strict_types=1);
 
 /**
- * Controlador encargado de la creación de imágenes.
+ * Controlador encargado de coordinar la creación de imágenes.
  *
- * Este controlador coordina:
- *
- * - la autenticación del usuario;
- * - la protección CSRF;
- * - la recepción de imágenes;
- * - la validación mediante ImageService;
- * - el almacenamiento del archivo;
- * - la creación del registro en MariaDB.
- *
- * La validación de archivos pertenece a ImageService.
- * El acceso a MariaDB pertenece al modelo Image.
+ * ImageService valida y almacena la imagen original.
+ * ImageProcessor aplica el overlay y genera el JPEG final.
+ * Image guarda los datos de la imagen en MariaDB.
  */
 class ImageController extends Controller
 {
     /**
-     * Muestra la página definitiva para crear una imagen.
-     *
-     * El usuario puede elegir entre:
-     *
-     * - subir una imagen desde su dispositivo;
-     * - utilizar la webcam.
+     * Overlay que se aplicará por defecto a cada fotografía.
+     */
+    private const DEFAULT_OVERLAY = 'neon-frame.png';
+
+    /**
+     * Muestra el formulario de creación de imágenes.
      */
     public function showCreate(): void
     {
-        /*
-         * Solamente los usuarios autenticados pueden
-         * acceder a la creación de imágenes.
-         */
         if (!Auth::check()) {
             $this->redirect('/login');
-
             return;
         }
+        
+        // Obtenemos los overlays PNG disponibles en el servidor.
+        $overlayDirectory = dirname(__DIR__, 2)
+            . '/storage/overlays';
 
-        /*
-         * Generamos el token CSRF necesario para proteger
-         * el formulario contra solicitudes externas.
-         */
-        $csrfToken = Csrf::token();
+        $overlays = [];
 
-        /*
-         * Mostramos la vista definitiva de creación.
-         */
+        if (is_dir($overlayDirectory)) {
+            $overlayFiles = glob(
+                $overlayDirectory . '/*.png'
+            ) ?: [];
+
+            foreach ($overlayFiles as $overlayPath) {
+                if (
+                    is_file($overlayPath)
+                    && is_readable($overlayPath)
+                ) {
+                    // La vista recibe el nombre, no una ruta del servidor.
+                    $overlays[] = basename($overlayPath);
+                }
+            }
+
+            // Orden estable para que el selector sea predecible.
+            sort($overlays, SORT_NATURAL | SORT_FLAG_CASE);
+        }
+
         $this->render('gallery/create', [
-            'csrfToken' => $csrfToken,
+            'csrfToken' => Csrf::token(),
+            'overlays' => $overlays,
         ]);
     }
 
     /**
-     * Procesa una imagen subida desde el dispositivo
-     * o capturada mediante la webcam.
+     * Recibe una fotografía, aplica el overlay y guarda el resultado.
      */
     public function create(): void
     {
-        /*
-         * Comprobamos que el usuario esté autenticado.
-         */
         if (!Auth::check()) {
             $this->redirect('/login');
-
             return;
         }
 
-        /*
-         * Verificamos el token CSRF antes de procesar
-         * cualquier archivo enviado por el navegador.
-         */
+        // Comprobamos el token CSRF antes de procesar archivos.
         if (!Csrf::verify($_POST['csrf_token'] ?? '')) {
             http_response_code(403);
-
             echo 'Solicitud no válida.';
-
             return;
         }
 
-        /*
-         * Determinamos qué tipo de imagen ha enviado
-         * el navegador.
-         *
-         * La vista utiliza:
-         *
-         * - "image" para archivos seleccionados;
-         * - "camera_image" para capturas de webcam.
-         */
         $uploadedFile = $this->getUploadedFile();
 
-        /*
-         * Si no existe ningún archivo válido, mostramos
-         * un mensaje controlado al usuario.
-         */
         if ($uploadedFile === null) {
             $this->renderCreateWithError(
                 'No se ha seleccionado ni capturado ninguna imagen.'
             );
-
             return;
         }
 
-        try {
-            /*
-             * ImageService realiza las comprobaciones de seguridad:
-             *
-             * - tamaño;
-             * - MIME real;
-             * - formato;
-             * - dimensiones;
-             * - número de píxeles;
-             * - nombre aleatorio;
-             * - almacenamiento seguro.
-             */
-            $imageService = new ImageService();
 
+        // Leemos el overlay elegido en el formulario.
+        $selectedOverlay = $_POST['overlay'] ?? '';
+
+        // Comprobamos que el valor recibido sea una cadena.
+        if (!is_string($selectedOverlay)) {
+            $this->renderCreateWithError(
+                'El overlay seleccionado no es válido.'
+            );
+            return;
+        }
+
+        // Obtenemos los nombres de los overlays disponibles.
+        $overlayDirectory = dirname(__DIR__, 2)
+            . '/storage/overlays';
+
+        $overlayFiles = glob(
+            $overlayDirectory . '/*.png'
+        ) ?: [];
+
+        $availableOverlays = array_map(
+            'basename',
+            $overlayFiles
+        );
+
+        // Rechazamos cualquier nombre que no esté disponible.
+        if (
+            $selectedOverlay !== ''
+            && !in_array(
+                $selectedOverlay,
+                $availableOverlays,
+                true
+            )
+        ) {
+            $this->renderCreateWithError(
+                'El overlay seleccionado no es válido.'
+            );
+            return;
+        }
+
+
+        $userId = Auth::userId();
+
+        if ($userId === null) {
+            $this->redirect('/login');
+            return;
+        }
+
+        /*
+         * Inicializamos los resultados para poder limpiar
+         * los archivos si una fase posterior falla.
+         */
+        $uploadedImage = null;
+        $generatedImage = null;
+        $imageModel = null;
+        $imageId = null;
+
+        try {
+            // 1. Validar y almacenar la fotografía original.
+            $imageService = new ImageService();
             $uploadedImage = $imageService->upload($uploadedFile);
 
-            /*
-             * Obtenemos el ID del usuario autenticado.
-             */
-            $userId = Auth::userId();
+            // 2. Aplicar el overlay y generar el JPEG final.
+            $imageProcessor = new ImageProcessor();
 
-            /*
-             * Esta comprobación es defensiva.
-             */
-            if ($userId === null) {
-                $this->redirect('/login');
-
-                return;
-            }
-
-            /*
-             * Creamos el modelo Image utilizando la conexión
-             * centralizada de la aplicación.
-             */
-            $imageModel = new Image(
-                Database::connection()
+            $generatedImage = $imageProcessor->process(
+                $uploadedImage['path'],
+                $selectedOverlay
             );
 
-            /*
-             * Creamos el registro de la imagen en MariaDB.
-             *
-             * Todavía no existe generated_filename porque
-             * la fase de composición con overlays llegará
-             * posteriormente.
-             */
+            // 3. Preparar el modelo y guardar el registro.
+            $imageModel = new Image(Database::connection());
+
             $imageId = $imageModel->create(
                 $userId,
                 $uploadedImage['filename'],
@@ -156,89 +164,188 @@ class ImageController extends Controller
                 $uploadedImage['height']
             );
 
-            /*
-             * Guardamos temporalmente el ID en una variable
-             * que utilizaremos en la siguiente fase del flujo.
-             *
-             * En este punto ya tenemos:
-             *
-             * - archivo validado;
-             * - archivo almacenado;
-             * - registro creado en MariaDB.
-             */
+            // 4. Vincular el JPEG generado al registro de MariaDB.
+            $imageModel->setGeneratedFilename(
+                $imageId,
+                $generatedImage['filename']
+            );
+
+            // 5. Mostrar la confirmación solo si todo ha funcionado.
             $this->render('gallery/create', [
                 'csrfToken' => Csrf::token(),
-                'success' => 'La imagen se ha subido correctamente.',
+                'success' => 'La imagen se ha creado correctamente.',
                 'imageId' => $imageId,
             ]);
         } catch (RuntimeException $exception) {
-            /*
-             * Mostramos solamente errores controlados.
-             */
+            // Los errores controlados se pueden mostrar al usuario.
+            $this->cleanupCreation(
+                $uploadedImage,
+                $generatedImage,
+                $imageModel,
+                $imageId
+            );
+
             $this->renderCreateWithError(
                 $exception->getMessage()
+            );
+        } catch (Throwable $exception) {
+            /*
+             * Los errores internos se registran en el log.
+             * No mostramos detalles de base de datos o del servidor.
+             */
+            error_log(
+                'Error al crear una imagen: ' . $exception->getMessage()
+            );
+
+            $this->cleanupCreation(
+                $uploadedImage,
+                $generatedImage,
+                $imageModel,
+                $imageId
+            );
+
+            $this->renderCreateWithError(
+                'No se ha podido crear la imagen. Inténtalo de nuevo.'
             );
         }
     }
 
     /**
-     * Determina qué archivo ha enviado el navegador.
-     *
-     * La vista utiliza dos campos:
-     *
-     * - image: subida desde dispositivo;
-     * - camera_image: captura de webcam.
+     * Busca la imagen enviada desde el formulario o la webcam.
      *
      * @return array<string, mixed>|null
      */
     private function getUploadedFile(): ?array
     {
-        /*
-         * Primero comprobamos si existe una captura
-         * procedente de la webcam.
-         */
-        if (
-            isset($_FILES['camera_image'])
-            && is_array($_FILES['camera_image'])
-            && isset($_FILES['camera_image']['error'])
-            && $_FILES['camera_image']['error'] !== UPLOAD_ERR_NO_FILE
-        ) {
-            return $_FILES['camera_image'];
+        foreach (['camera_image', 'image'] as $field) {
+            if (
+                isset($_FILES[$field])
+                && is_array($_FILES[$field])
+                && isset($_FILES[$field]['error'])
+                && $_FILES[$field]['error'] !== UPLOAD_ERR_NO_FILE
+            ) {
+                return $_FILES[$field];
+            }
         }
 
-        /*
-         * Si no hay captura de webcam, comprobamos
-         * la subida normal desde el dispositivo.
-         */
-        if (
-            isset($_FILES['image'])
-            && is_array($_FILES['image'])
-            && isset($_FILES['image']['error'])
-            && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE
-        ) {
-            return $_FILES['image'];
-        }
-
-        /*
-         * No se ha recibido ninguna imagen.
-         */
         return null;
     }
 
     /**
-     * Vuelve a mostrar la página de creación con un error.
+     * Intenta revertir los cambios si falla la creación.
+     *
+     * Solo elimina archivos devueltos por los servicios de esta
+     * operación y un registro cuyo ID se haya obtenido correctamente.
+     */
+    private function cleanupCreation(
+        ?array $uploadedImage,
+        ?array $generatedImage,
+        ?Image $imageModel,
+        ?int $imageId
+    ): void {
+        if ($imageId !== null && $imageModel !== null) {
+            try {
+                $imageModel->delete($imageId);
+            } catch (Throwable $exception) {
+                error_log(
+                    'No se pudo eliminar el registro de imagen: '
+                    . $exception->getMessage()
+                );
+            }
+        }
+
+        foreach ([$generatedImage, $uploadedImage] as $image) {
+            if (
+                is_array($image)
+                && isset($image['path'])
+                && is_string($image['path'])
+                && is_file($image['path'])
+            ) {
+                if (!@unlink($image['path'])) {
+                    error_log(
+                        'No se pudo eliminar un archivo de una creación fallida.'
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * Vuelve a mostrar el formulario con un mensaje de error.
      */
     private function renderCreateWithError(string $error): void
     {
-        /*
-         * Generamos un token CSRF para el formulario
-         * que se vuelve a mostrar.
-         */
-        $csrfToken = Csrf::token();
-
         $this->render('gallery/create', [
-            'csrfToken' => $csrfToken,
+            'csrfToken' => Csrf::token(),
             'error' => $error,
         ]);
+    }
+
+    /**
+     * Sirve una imagen generada que esté registrada en MariaDB.
+     *
+     * No permite acceder a las imágenes originales de storage/uploads.
+     */
+    public function showGenerated(): void
+    {
+        $filename = $_GET['filename'] ?? '';
+
+        // Solo aceptamos nombres aleatorios con extensión JPEG.
+        if (
+            !is_string($filename)
+            || !preg_match('/\A[a-f0-9]{64}\.jpg\z/', $filename)
+        ) {
+            http_response_code(404);
+            echo 'Imagen no encontrada.';
+            return;
+        }
+
+        try {
+            $database = Database::connection();
+
+            $statement = $database->prepare(
+                'SELECT generated_filename
+                FROM images
+                WHERE generated_filename = :filename
+                LIMIT 1'
+            );
+
+            $statement->execute([
+                'filename' => $filename,
+            ]);
+
+            $image = $statement->fetch(PDO::FETCH_ASSOC);
+
+            if (!$image) {
+                http_response_code(404);
+                echo 'Imagen no encontrada.';
+                return;
+            }
+
+            $path = dirname(__DIR__, 2)
+                . '/storage/generated/'
+                . $filename;
+
+            if (!is_file($path) || !is_readable($path)) {
+                http_response_code(404);
+                echo 'Imagen no encontrada.';
+                return;
+            }
+
+            header('Content-Type: image/jpeg');
+            header('Content-Length: ' . (string) filesize($path));
+            header('X-Content-Type-Options: nosniff');
+            header('Cache-Control: public, max-age=86400');
+
+            readfile($path);
+        } catch (Throwable $exception) {
+            error_log(
+                'Error al servir una imagen generada: '
+                . $exception->getMessage()
+            );
+
+            http_response_code(500);
+            echo 'No se ha podido cargar la imagen.';
+        }
     }
 }

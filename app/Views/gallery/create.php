@@ -46,13 +46,14 @@
         </div>
     <?php endif; ?>
 
-    <?php if (isset($_GET['success'])): ?>
-        <!--
-            Este mensaje se utiliza mientras terminamos
-            de implementar el procesamiento de overlays.
-        -->
+    <?php if (isset($success) && is_string($success)): ?>
+        <!-- Confirmación de que el controlador ha completado la operación. -->
         <div class="alert alert-success">
-            La imagen se ha subido correctamente.
+            <?= htmlspecialchars(
+                $success,
+                ENT_QUOTES,
+                'UTF-8'
+            ) ?>
         </div>
     <?php endif; ?>
 
@@ -173,6 +174,45 @@
             alt="Vista previa de la imagen"
         >
     </div>
+
+        <!--
+            Selector del overlay que se aplicará a la imagen.
+            El valor vacío representa crear la imagen sin overlay.
+        -->
+        <div class="overlay-selector">
+            <label for="overlay">
+                Elige un overlay
+            </label>
+
+            <select
+                id="overlay"
+                name="overlay"
+            >
+                <option value="">
+                    Sin overlay
+                </option>
+
+                <?php foreach (($overlays ?? []) as $overlay): ?>
+                    <option
+                        value="<?= htmlspecialchars(
+                            $overlay,
+                            ENT_QUOTES,
+                            'UTF-8'
+                        ) ?>"
+                    >
+                        <?= htmlspecialchars(
+                            pathinfo($overlay, PATHINFO_FILENAME),
+                            ENT_QUOTES,
+                            'UTF-8'
+                        ) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+
+            <p class="field-description">
+                Selecciona un efecto visual para tu imagen.
+            </p>
+        </div>
 
         <!--
             Este input será rellenado por JavaScript cuando

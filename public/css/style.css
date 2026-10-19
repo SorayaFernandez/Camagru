@@ -459,3 +459,483 @@ main {
     outline: 2px solid #3b82f6;
     outline-offset: 4px;
 }
+/* =========================================================
+   CAMAGRU — INICIO Y GALERÍA FUTURISTA
+   Sección añadida para completar la identidad visual.
+   ========================================================= */
+
+/* ---------- Marca y navegación real del layout ---------- */
+
+.logo {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    font-size: 1.55rem;
+    font-weight: 900;
+    letter-spacing: 0.07em;
+    text-decoration: none;
+}
+
+.logo-pink {
+    color: var(--color-pink);
+    text-shadow: 0 0 18px rgba(236, 72, 153, 0.35);
+}
+
+.logo-purple {
+    color: #c4b5fd;
+    text-shadow: 0 0 18px rgba(168, 85, 247, 0.35);
+}
+
+/* Los enlaces del layout no tienen una clase individual. */
+.main-nav > a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 9px 13px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+    font-size: 0.92rem;
+    font-weight: 600;
+    transition:
+        color 180ms ease,
+        background-color 180ms ease,
+        border-color 180ms ease;
+}
+
+.main-nav > a:hover {
+    color: #fff;
+    border-color: rgba(168, 85, 247, 0.28);
+    background: rgba(168, 85, 247, 0.12);
+}
+
+.main-nav > a:focus-visible,
+.logo:focus-visible,
+.nav-button:focus-visible {
+    outline: 2px solid var(--color-blue);
+    outline-offset: 4px;
+}
+
+/* ---------- Fondo y área principal ---------- */
+
+.site-main {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+}
+
+.site-main > .container {
+    position: relative;
+    z-index: 1;
+}
+
+.site-main::before {
+    position: absolute;
+    z-index: -1;
+    top: 40px;
+    left: -180px;
+    width: 360px;
+    height: 360px;
+    border-radius: 50%;
+    background: rgba(236, 72, 153, 0.07);
+    filter: blur(100px);
+    content: "";
+    pointer-events: none;
+}
+
+.site-main::after {
+    position: absolute;
+    z-index: -1;
+    top: 420px;
+    right: -180px;
+    width: 380px;
+    height: 380px;
+    border-radius: 50%;
+    background: rgba(59, 130, 246, 0.07);
+    filter: blur(110px);
+    content: "";
+    pointer-events: none;
+}
+
+/* ---------- Hero de la página de inicio ---------- */
+
+.hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 350px;
+    margin: 0 0 66px;
+    padding: clamp(30px, 6vw, 68px);
+    overflow: hidden;
+    border: 1px solid rgba(168, 85, 247, 0.30);
+    border-radius: 28px;
+    background:
+        radial-gradient(
+            ellipse at 85% 20%,
+            rgba(59, 130, 246, 0.20),
+            transparent 42%
+        ),
+        radial-gradient(
+            ellipse at 75% 100%,
+            rgba(236, 72, 153, 0.16),
+            transparent 45%
+        ),
+        linear-gradient(
+            125deg,
+            rgba(25, 18, 51, 0.98),
+            rgba(12, 12, 32, 0.98) 65%,
+            rgba(15, 24, 49, 0.98)
+        );
+    box-shadow:
+        0 24px 70px rgba(0, 0, 0, 0.24),
+        inset 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.hero::after {
+    position: absolute;
+    top: -100px;
+    right: -60px;
+    width: 300px;
+    height: 300px;
+    border: 1px solid rgba(168, 85, 247, 0.18);
+    border-radius: 50%;
+    box-shadow:
+        0 0 0 35px rgba(168, 85, 247, 0.035),
+        0 0 0 75px rgba(59, 130, 246, 0.025);
+    content: "";
+    pointer-events: none;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+}
+
+.eyebrow {
+    margin: 0 0 14px;
+    color: #d8b4fe;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    line-height: 1.6;
+    text-transform: uppercase;
+}
+
+.hero h1 {
+    max-width: 700px;
+    margin: 0;
+    font-size: clamp(2.5rem, 6vw, 4.6rem);
+    font-weight: 850;
+    letter-spacing: -0.065em;
+    line-height: 1.04;
+    text-wrap: balance;
+}
+
+.hero h1::first-line {
+    color: #fff;
+    text-shadow: 0 0 36px rgba(168, 85, 247, 0.16);
+}
+
+.hero-description {
+    max-width: 570px;
+    margin: 22px 0 28px;
+    color: #c1bfdc;
+    font-size: clamp(1rem, 1.8vw, 1.12rem);
+    line-height: 1.8;
+}
+
+.hero-content > .btn {
+    margin: 0 10px 8px 0;
+}
+
+/* ---------- Botones utilizados por la vista de inicio ---------- */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 48px;
+    padding: 12px 21px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    font-size: 0.94rem;
+    font-weight: 750;
+    line-height: 1.35;
+    text-align: center;
+    cursor: pointer;
+    transition:
+        transform 180ms ease,
+        box-shadow 180ms ease,
+        border-color 180ms ease,
+        background-color 180ms ease;
+}
+
+.btn-primary {
+    color: #fff;
+    background: linear-gradient(
+        110deg,
+        #ec4899 0%,
+        #c026d3 52%,
+        #8b5cf6 100%
+    );
+    box-shadow:
+        0 8px 24px rgba(192, 38, 211, 0.20),
+        0 0 20px rgba(236, 72, 153, 0.12);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 12px 30px rgba(192, 38, 211, 0.30),
+        0 0 28px rgba(236, 72, 153, 0.22);
+}
+
+.btn-secondary {
+    color: #e9ddff;
+    border-color: rgba(168, 85, 247, 0.42);
+    background: rgba(168, 85, 247, 0.09);
+}
+
+.btn-secondary:hover {
+    transform: translateY(-2px);
+    border-color: rgba(192, 132, 252, 0.78);
+    background: rgba(168, 85, 247, 0.17);
+    box-shadow: var(--glow-purple);
+}
+
+.btn:focus-visible {
+    outline: 2px solid #67e8f9;
+    outline-offset: 4px;
+}
+
+/* ---------- Cabecera de la galería ---------- */
+
+.gallery-section {
+    margin: 0 0 48px;
+}
+
+.gallery-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 28px;
+}
+
+.gallery-heading .eyebrow {
+    margin-bottom: 8px;
+    color: #67e8f9;
+}
+
+.gallery-heading h2 {
+    margin: 0;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 800;
+    letter-spacing: -0.045em;
+    line-height: 1.2;
+}
+
+.gallery-description {
+    margin: 10px 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.98rem;
+    line-height: 1.7;
+}
+
+/* ---------- Cuadrícula de imágenes ---------- */
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px;
+}
+
+.gallery-card {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid rgba(168, 85, 247, 0.22);
+    border-radius: 18px;
+    background: linear-gradient(
+        145deg,
+        rgba(27, 25, 56, 0.95),
+        rgba(14, 13, 34, 0.98)
+    );
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.17);
+    transition:
+        transform 220ms ease,
+        border-color 220ms ease,
+        box-shadow 220ms ease;
+}
+
+.gallery-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(192, 132, 252, 0.65);
+    box-shadow:
+        0 18px 38px rgba(0, 0, 0, 0.26),
+        0 0 24px rgba(168, 85, 247, 0.09);
+}
+
+.gallery-image-link {
+    display: block;
+    overflow: hidden;
+    background: #0b0a1b;
+}
+
+.gallery-image-link:focus-visible {
+    outline: 2px solid #67e8f9;
+    outline-offset: -4px;
+}
+
+.gallery-image {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    transition: transform 300ms ease;
+}
+
+.gallery-card:hover .gallery-image {
+    transform: scale(1.035);
+}
+
+.gallery-card-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+    padding: 15px 16px;
+}
+
+.gallery-author {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: #f0abfc;
+    font-size: 0.9rem;
+    font-weight: 750;
+}
+
+.gallery-date {
+    color: #9692b8;
+    font-size: 0.76rem;
+    overflow-wrap: anywhere;
+}
+
+/* ---------- Galería vacía ---------- */
+
+.gallery-empty {
+    padding: clamp(28px, 5vw, 54px) 24px;
+    border: 1px dashed rgba(168, 85, 247, 0.42);
+    border-radius: 20px;
+    background:
+        radial-gradient(
+            ellipse at 50% 0%,
+            rgba(168, 85, 247, 0.12),
+            transparent 65%
+        ),
+        rgba(17, 16, 39, 0.65);
+    text-align: center;
+}
+
+.gallery-empty h3 {
+    margin: 0 0 10px;
+    font-size: clamp(1.2rem, 3vw, 1.6rem);
+    letter-spacing: -0.025em;
+}
+
+.gallery-empty p {
+    max-width: 500px;
+    margin: 0 auto 24px;
+    color: var(--color-text-muted);
+    line-height: 1.8;
+}
+
+/* ---------- Adaptación a tabletas y móviles ---------- */
+
+@media (max-width: 900px) {
+    .gallery-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .hero {
+        min-height: 320px;
+    }
+}
+
+@media (max-width: 640px) {
+    .logo {
+        font-size: 1.25rem;
+    }
+
+    .main-nav {
+        flex-wrap: wrap;
+    }
+
+    .main-nav > a {
+        min-height: 38px;
+        padding: 8px;
+        font-size: 0.82rem;
+    }
+
+    .hero {
+        min-height: 0;
+        margin-bottom: 44px;
+        padding: 30px 22px;
+        border-radius: 20px;
+    }
+
+    .hero h1 {
+        font-size: clamp(2.25rem, 10vw, 3.4rem);
+    }
+
+    .hero-description {
+        margin-block: 18px 24px;
+        font-size: 0.98rem;
+    }
+
+    .hero-content > .btn {
+        margin-right: 0;
+    }
+
+    .gallery-heading {
+        margin-bottom: 22px;
+    }
+
+    .gallery-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+    }
+
+    .gallery-image {
+        aspect-ratio: 4 / 3;
+    }
+
+    .gallery-card-info {
+        padding: 14px;
+    }
+
+    .gallery-empty .btn {
+        width: 100%;
+        max-width: 320px;
+    }
+}
+
+/* Respeta la preferencia del usuario de reducir el movimiento. */
+@media (prefers-reduced-motion: reduce) {
+    .gallery-card,
+    .gallery-image,
+    .btn {
+        transition: none;
+    }
+
+    .gallery-card:hover,
+    .btn-primary:hover,
+    .btn-secondary:hover {
+        transform: none;
+    }
+}
+
