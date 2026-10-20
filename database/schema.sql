@@ -14,56 +14,53 @@ CREATE TABLE users (
 
     comment_notifications BOOLEAN NOT NULL DEFAULT TRUE,
 
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
 
     UNIQUE KEY uq_users_username (username),
     UNIQUE KEY uq_users_email (email),
-
-    UNIQUE KEY uq_users_confirmation_token (
-        confirmation_token_hash
-    ),
-
-    UNIQUE KEY uq_users_reset_token (
-        reset_token_hash
-    )
-);
+    UNIQUE KEY uq_users_confirmation_token (confirmation_token_hash),
+    UNIQUE KEY uq_users_reset_token (reset_token_hash)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 CREATE TABLE overlays (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     filename VARCHAR(255) NOT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     UNIQUE KEY uq_overlays_filename (filename)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 CREATE TABLE images (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id INT UNSIGNED NOT NULL,
-    filename VARCHAR(255) NOT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    stored_filename VARCHAR(255) NOT NULL,
+    generated_filename VARCHAR(255) DEFAULT NULL,
+    mime_type VARCHAR(50) NOT NULL,
+    width INT UNSIGNED NOT NULL,
+    height INT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_images_user
         FOREIGN KEY (user_id)
         REFERENCES users(id)
-        ON DELETE CASCADE,
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
 
-    UNIQUE KEY uq_images_filename (filename),
-
-    INDEX idx_images_created_at (created_at),
-    INDEX idx_images_user_id (user_id)
-);
+    INDEX idx_images_user_id (user_id),
+    INDEX idx_images_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 CREATE TABLE likes (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id INT UNSIGNED NOT NULL,
     image_id INT UNSIGNED NOT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_likes_user
         FOREIGN KEY (user_id)
@@ -76,9 +73,8 @@ CREATE TABLE likes (
         ON DELETE CASCADE,
 
     UNIQUE KEY uq_likes_user_image (user_id, image_id),
-
     INDEX idx_likes_image_id (image_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 CREATE TABLE comments (
@@ -86,7 +82,7 @@ CREATE TABLE comments (
     user_id INT UNSIGNED NOT NULL,
     image_id INT UNSIGNED NOT NULL,
     content TEXT NOT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_comments_user
         FOREIGN KEY (user_id)
@@ -100,4 +96,4 @@ CREATE TABLE comments (
 
     INDEX idx_comments_image_id (image_id),
     INDEX idx_comments_created_at (created_at)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

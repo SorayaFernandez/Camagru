@@ -175,47 +175,191 @@ class Image
         return $statement->fetchAll();
     }
 
+    
     /**
-     * Obtiene las imágenes que forman parte de la galería pública.
-     *
-     * De momento utilizamos la imagen generada como referencia
-     * para la galería.
-     *
-     * Las imágenes sin resultado generado todavía no se muestran.
+     * Obtiene las imágenes de la galería con su información de "Me gusta".
      *
      * @return array<int, array<string, mixed>>
      */
     public function findForGallery(
         int $limit = 20,
-        int $offset = 0
+        int $offset = 0,
+        ?int $currentUserId = null
     ): array {
-        /*
-         * Limit y offset no se pueden utilizar directamente
-         * como parámetros PDO en todas las configuraciones.
-         *
-         * Por eso los convertimos explícitamente a enteros antes
-         * de incorporarlos a la consulta.
-         */
         $limit = max(1, min($limit, 100));
         $offset = max(0, $offset);
 
-        $statement = $this->database->query(
-            'SELECT
+        $userLikeSql = $currentUserId !== null
+            ? 'EXISTS (
+                SELECT 1
+                FROM likes AS user_likes
+                WHERE user_likes.image_id = images.id
+                  AND user_likes.user_id = :current_user_id
+            )'
+            : '0';
+
+        $sql = '
+            SELECT
                 images.id,
                 images.user_id,
                 images.generated_filename,
                 images.width,
                 images.height,
                 images.created_at,
-                users.username
-             FROM images
-             INNER JOIN users
+                users.username,
+                (
+                    SELECT COUNT(*)
+                    FROM likes AS image_likes
+                    WHERE image_likes.image_id = images.id
+                ) AS likes_count,
+                ' . $userLikeSql . ' AS user_liked
+            FROM images
+            INNER JOIN users
                 ON users.id = images.user_id
-             WHERE images.generated_filename IS NOT NULL
-             ORDER BY images.created_at DESC, images.id DESC
-             LIMIT ' . $limit . '
-             OFFSET ' . $offset
+            WHERE images.generated_filename IS NOT NULL
+            ORDER BY images.created_at DESC, images.id DESC
+            LIMIT ' . $limit . '
+            OFFSET ' . $offset;
+
+        $statement = $this->database->prepare($sql);
+
+        if ($currentUserId !== null) {
+            $statement->bindValue(
+                ':current_user_id',
+                $currentUserId,
+                PDO::PARAM_INT
+            );
+        }
+
+        $statement->execute();
+
+        return $statement->fetchAll();
+    }
+
+
+        /**
+     * Cuenta los "Me gusta" de una imagen.
+     */
+    public function countLikes(int $imageId): int
+    {
+        $statement = $this->database->prepare(
+            'SELECT COUNT(*)
+             FROM likes
+             WHERE image_id = :image_id'
         );
+
+        $statement->execute([
+            'image_id' => $imageId,
+        ]);
+
+        return (int) $statement->fetchColumn();
+    }
+
+    /**
+     * Comprueba si un usuario ya ha dado "Me gusta".
+     */
+    public function hasUserLiked(
+        int $imageId,
+        int $userId
+    ): bool {
+        $statement = $this->database->prepare(
+            'SELECT 1
+             FROM likes
+             WHERE image_id = :image_id
+               AND user_id = :user_id
+             LIMIT 1'
+        );
+
+        $statement->execute([
+            'image_id' => $imageId,
+            'user_id' => $userId,
+        ]);
+
+        return $statement->fetchColumn() !== false;
+    }
+
+    /**
+     * Registra un "Me gusta".
+     *
+     * La restricción UNIQUE de la base de datos impide
+     * que un usuario tenga duplicados para la misma imagen.
+     */
+    public function addLike(int $imageId, int $userId): void
+    {
+        $statement = $this->database->prepare(
+            'INSERT INTO likes (user_id, image_id)
+             VALUES (:user_id, :image_id)
+             ON DUPLICATE KEY UPDATE user_id = VALUES(user_id)'
+        );
+
+        $statement->execute([
+            'user_id' => $userId,
+            'image_id' => $imageId,
+        ]);
+    }
+
+    /**
+     * Elimina el "Me gusta" de ese usuario para esa imagen.
+     */
+    public function removeLike(int $imageId, int $userId): void
+    {
+        $statement = $this->database->prepare(
+            'DELETE FROM likes
+             WHERE image_id = :image_id
+               AND user_id = :user_id'
+        );
+
+        $statement->execute([
+            'image_id' => $imageId,
+            'user_id' => $userId,
+        ]);
+    }
+
+    /**
+     * Guarda un comentario.
+     */
+    public function addComment(
+        int $imageId,
+        int $userId,
+        string $content
+    ): void {
+        $statement = $this->database->prepare(
+            'INSERT INTO comments (user_id, image_id, content)
+             VALUES (:user_id, :image_id, :content)'
+        );
+
+        $statement->execute([
+            'user_id' => $userId,
+            'image_id' => $imageId,
+            'content' => $content,
+        ]);
+    }
+
+    /**
+     * Recupera los comentarios de una imagen con sus autores.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function findCommentsForImage(int $imageId): array
+    {
+        $statement = $this->database->prepare(
+            'SELECT
+                comments.id,
+                comments.user_id,
+                comments.image_id,
+                comments.content,
+                comments.created_at,
+                users.username
+             FROM comments
+             INNER JOIN users
+                ON users.id = comments.user_id
+             WHERE comments.image_id = :image_id
+             ORDER BY comments.created_at ASC, comments.id ASC'
+        );
+
+        $statement->execute([
+            'image_id' => $imageId,
+        ]);
 
         return $statement->fetchAll();
     }
