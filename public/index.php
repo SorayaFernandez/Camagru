@@ -19,6 +19,7 @@ require_once dirname(__DIR__) . '/app/Controllers/AuthController.php';
 require_once dirname(__DIR__) . '/app/Controllers/ImageController.php';
 require_once dirname(__DIR__) . '/app/Controllers/ConfirmController.php';
 require_once dirname(__DIR__) . '/app/Controllers/ProfileController.php';
+require_once dirname(__DIR__) . '/app/Controllers/InteractionController.php';
 require_once dirname(__DIR__) . '/app/Controllers/RegisterController.php';
 
 $router = new Router();
@@ -37,6 +38,9 @@ $authController = new AuthController();
 
 // Controller del perfil de usuario.
 $profileController = new ProfileController();
+
+// Gestiona los "Me gusta" y los comentarios de la galería.
+$interactionController = new InteractionController();
 
 // Página principal.
 $router->get('/', [$homeController, 'index']);
@@ -93,6 +97,10 @@ $router->post(
     '/create-image',
     [new ImageController(), 'create']
 );
+
+// Gestiona las interacciones con las imágenes de la galería.
+$router->post('/image-like', [$interactionController, 'toggleLike']);
+$router->post('/comment', [$interactionController, 'addComment']);
 
 // Sirve únicamente imágenes procesadas y registradas.
 $router->get(

@@ -2,6 +2,7 @@
 
 /storage/generated/*
 /storage/overlays/*
+/storage/uploads/*
 
 !/storage/generated/.gitkeep
 !/storage/overlays/.gitkeep

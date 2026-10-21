@@ -939,3 +939,329 @@ main {
     }
 }
 
+
+/* ==========================================================
+   CAMAGRU — Paginación y controles de interacción
+   ========================================================== */
+
+/* Resumen de imágenes mostradas */
+.gallery-pagination-summary {
+    margin: 28px 0 16px;
+    color: #b8b3d1;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+/* Contenedor principal de paginación */
+.gallery-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 0 auto 42px;
+}
+
+/* Botones anterior y siguiente */
+.pagination-arrow,
+.pagination-page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    min-height: 42px;
+    padding: 0 13px;
+    border: 1px solid rgba(174, 119, 255, 0.3);
+    border-radius: 12px;
+    background: rgba(22, 18, 43, 0.88);
+    color: #eee9ff;
+    font: inherit;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition:
+        transform 180ms ease,
+        border-color 180ms ease,
+        background 180ms ease,
+        box-shadow 180ms ease;
+}
+
+.pagination-arrow:hover,
+.pagination-page:hover {
+    transform: translateY(-2px);
+    border-color: #c77dff;
+    background: rgba(119, 62, 190, 0.22);
+    box-shadow: 0 0 18px rgba(173, 87, 255, 0.16);
+}
+
+.pagination-pages {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.pagination-page.is-current {
+    border-color: transparent;
+    background: linear-gradient(135deg, #ff4fc8, #9b5cff 60%, #537bff);
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 0 20px rgba(190, 82, 255, 0.28);
+    cursor: default;
+}
+
+.pagination-arrow.is-disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+}
+
+.pagination-ellipsis {
+    padding: 0 3px;
+    color: #aaa0c9;
+}
+
+/* Foco visible para navegación con teclado */
+.pagination-arrow:focus-visible,
+.pagination-page:focus-visible,
+.btn-like:focus-visible,
+.comment-form button:focus-visible {
+    outline: 2px solid #ff78dc;
+    outline-offset: 4px;
+}
+
+/* Fila de interacciones de cada publicación */
+.gallery-interactions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 16px;
+    border-top: 1px solid rgba(174, 119, 255, 0.13);
+}
+
+.gallery-like-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.gallery-like-count {
+    color: #e8e1fa;
+    font-size: 0.9rem;
+}
+
+.like-form {
+    display: inline-flex;
+    margin: 0;
+}
+
+.btn-like {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 8px 14px;
+    border: 1px solid rgba(255, 89, 190, 0.38);
+    border-radius: 999px;
+    background: rgba(255, 79, 200, 0.07);
+    color: #ff8bd9;
+    font: inherit;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition:
+        background 180ms ease,
+        border-color 180ms ease,
+        box-shadow 180ms ease,
+        transform 180ms ease;
+}
+
+.btn-like:hover {
+    transform: translateY(-1px);
+    border-color: #ff65c8;
+    background: rgba(255, 79, 200, 0.15);
+}
+
+.btn-like.is-liked {
+    border-color: rgba(255, 79, 160, 0.65);
+    background: linear-gradient(
+        135deg,
+        rgba(255, 65, 156, 0.2),
+        rgba(164, 75, 255, 0.18)
+    );
+    color: #ff70b9;
+    box-shadow: 0 0 15px rgba(255, 65, 156, 0.12);
+}
+
+.interaction-login-link,
+.comment-login-prompt a {
+    color: #c7a1ff;
+    text-decoration: underline;
+    text-decoration-color: rgba(199, 161, 255, 0.4);
+    text-underline-offset: 3px;
+}
+
+.interaction-login-link:hover,
+.comment-login-prompt a:hover {
+    color: #ff8bd9;
+}
+
+/* Zona de comentarios */
+.gallery-comments {
+    padding: 0 16px 18px;
+}
+
+.gallery-comments h3 {
+    margin: 4px 0 14px;
+    color: #eee7ff;
+    font-size: 1rem;
+}
+
+.comment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0 0 18px;
+    padding: 0;
+    list-style: none;
+}
+
+.comment-item {
+    padding: 12px 14px;
+    border: 1px solid rgba(174, 119, 255, 0.14);
+    border-radius: 12px;
+    background: rgba(15, 12, 30, 0.62);
+}
+
+.comment-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px 12px;
+    margin-bottom: 7px;
+}
+
+.comment-header strong {
+    color: #d9b5ff;
+    font-size: 0.88rem;
+}
+
+.comment-date {
+    color: #938aa9;
+    font-size: 0.75rem;
+}
+
+.comment-content {
+    margin: 0;
+    color: #d2cce2;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.comments-empty,
+.comment-login-prompt {
+    margin: 0 0 16px;
+    color: #a9a0bd;
+    font-size: 0.87rem;
+    line-height: 1.6;
+}
+
+/* Formulario para publicar comentarios */
+.comment-form {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.comment-label {
+    color: #d9d0ee;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.comment-form textarea {
+    width: 100%;
+    min-height: 92px;
+    padding: 12px 14px;
+    border: 1px solid rgba(174, 119, 255, 0.26);
+    border-radius: 12px;
+    background: rgba(12, 10, 26, 0.78);
+    color: #f4efff;
+    font: inherit;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    resize: vertical;
+    transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.comment-form textarea::placeholder {
+    color: #827993;
+}
+
+.comment-form textarea:focus {
+    border-color: #ad70ff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(173, 112, 255, 0.12);
+}
+
+.comment-form button {
+    align-self: flex-start;
+}
+
+/* Adaptación para móviles */
+@media (max-width: 640px) {
+    .gallery-pagination {
+        gap: 7px;
+        margin-bottom: 30px;
+    }
+
+    .pagination-arrow,
+    .pagination-page {
+        min-width: 38px;
+        min-height: 38px;
+        padding: 0 10px;
+        border-radius: 10px;
+        font-size: 0.82rem;
+    }
+
+    .pagination-pages {
+        gap: 6px;
+    }
+
+    .gallery-interactions {
+        padding: 12px;
+    }
+
+    .gallery-comments {
+        padding: 0 12px 14px;
+    }
+
+    .gallery-like-row {
+        gap: 9px;
+    }
+
+    .comment-form button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Respeta la preferencia del sistema de reducir movimiento */
+@media (prefers-reduced-motion: reduce) {
+    .pagination-arrow,
+    .pagination-page,
+    .btn-like,
+    .comment-form textarea {
+        transition: none;
+    }
+
+    .pagination-arrow:hover,
+    .pagination-page:hover,
+    .btn-like:hover {
+        transform: none;
+    }
+}

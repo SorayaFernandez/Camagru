@@ -237,7 +237,27 @@ class Image
     }
 
 
-        /**
+    /**
+     * Cuenta las imágenes publicadas que pueden aparecer
+     * en la galería y que ya tienen una imagen generada.
+     *
+     * Este total permite calcular cuántas páginas necesita
+     * la galería sin cargar todas las imágenes en memoria.
+     */
+    public function countGalleryImages(): int
+    {
+        $statement = $this->database->prepare(
+            'SELECT COUNT(*)
+             FROM images
+             WHERE generated_filename IS NOT NULL'
+        );
+
+        $statement->execute();
+
+        return (int) $statement->fetchColumn();
+    }
+
+    /**
      * Cuenta los "Me gusta" de una imagen.
      */
     public function countLikes(int $imageId): int
