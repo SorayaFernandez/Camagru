@@ -23,7 +23,7 @@ SMTP_PORT=587
 SMTP_USER=sorayafernandezramirez@gmail.com
 
 # Contraseña de aplicación de Google.
-SMTP_PASSWORD=hsracacwcqfrqadd
+SMTP_PASSWORD=hsracacwcqfrqaddkk
 
 # Dirección desde la que Camagru enviará los correos.
 MAIL_FROM_ADDRESS=sorayafernandezramirez@gmail.com
